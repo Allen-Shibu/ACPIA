@@ -1,0 +1,85 @@
+[
+  {
+    "case": "case-riverside2",
+    "kind": "chat_message",
+    "source_file": "whatsapp_export.txt",
+    "timestamp": "2026-05-20T19:04:00",
+    "timestamp_raw": "2026-05-20 19:04",
+    "actor": "rider_mike",
+    "content": "hey, you looked cute in your school photo",
+    "extra": {},
+    "id": "51b7dadf0a4a"
+  },
+  {
+    "case": "case-riverside2",
+    "kind": "chat_message",
+    "source_file": "whatsapp_export.txt",
+    "timestamp": "2026-05-20T19:06:00",
+    "timestamp_raw": "2026-05-20 19:06",
+    "actor": "jenny_11",
+    "content": "um do i know you?",
+    "extra": {},
+    "id": "0d8f913d0824"
+  },
+  {
+    "case": "case-riverside2",
+    "kind": "chat_message",
+    "source_file": "whatsapp_export.txt",
+    "timestamp": "2026-05-20T19:09:00",
+    "timestamp_raw": "2026-05-20 19:09",
+    "actor": "rider_mike",
+    "content": "not yet :) i saw you on the app. how old are you really?",
+    "extra": {},
+    "id": "74865d837710"
+  },
+  {
+    "case": "case-riverside2",
+    "kind": "chat_message",
+    "source_file": "whatsapp_export.txt",
+    "timestamp": "2026-05-20T19:12:00",
+    "timestamp_raw": "2026-05-20 19:12",
+    "actor": "jenny_11",
+    "content": "13",
+    "extra": {},
+    "id": "b7f21c22fefe"
+  },
+  {
+    "case": "case-riverside2",
+    "kind": "chat_message",
+    "source_file": "whatsapp_export.txt",
+    "timestamp": "2026-05-20T19:14:00",
+    "timestamp_raw": "2026-05-20 19:14",
+    "actor": "rider_mike",
+    "content": "cool. dont tell your mom we talk ok? our secret",
+    "extra": {},
+    "id": "99bff14d2536"
+  },
+  {
+    "case": "case-riverside2",
+    "kind": "chat_message",
+    "source_file": "whatsapp_export.txt",
+    "timestamp": "2026-05-21T08:31:00",
+    "timestamp_raw": "2026-05-21 08:31",
+    "actor": "rider_mike",
+    "content": "want to meet friday after school? ill pick you up by the gate",
+    "extra": {},
+    "id": "f30b16c52ae8"
+  },
+  {
+    "case": "case-riverside2",
+    "kind": "image_capture",
+    "source_file": "seized_photo.jpg",
+    "timestamp": "2026-05-22T15:10:44",
+    "timestamp_raw": "2026:05:22 15:10:44",
+    "actor": null,
+    "content": "Image captured by Apple iPhone 14",
+    "extra": {
+      "gps": {
+        "lat": 51.50333333333333,
+        "lon": -0.1275
+      },
+      "camera": "Apple iPhone 14"
+    },
+    "id": "21e13cbdff1b"
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+    "case": "case-tl",
+    "kind": "chat_message",
+    "source_file": "chat_export.txt",
+    "timestamp": "2026-06-01T14:22:00",
+    "timestamp_raw": "2026-06-01 14:22",
+    "actor": "coolguy88",
+    "content": "hey saw your profile, you seem cool",
+    "extra": {},
+    "id": "c16a9ed406f2"
+  },
+  {
+    "case": "case-tl",
+    "kind": "chat_message",
+    "source_file": "chat_export.txt",
+    "timestamp": "2026-06-01T14:25:00",
+    "timestamp_raw": "2026-06-01 14:25",
+    "actor": "alexk_04",
+    "content": "hi who is this",
+    "extra": {},
+    "id": "d0d3f0b8e955"
+  },
+  {
+    "case": "case-tl",
+    "kind": "chat_message",
+    "source_file": "chat_export.txt",
+    "timestamp": "2026-06-01T14:31:00",
+    "timestamp_raw": "2026-06-01 14:31",
+    "actor": "coolguy88",
+    "content": "just someone who wants to be friends. dont tell your parents ok?",
+    "extra": {},
+    "id": "a05cb0b14ecb"
+  },
+  {
+    "case": "case-tl",
+    "kind": "chat_message",
+    "source_file": "chat_export.txt",
+    "timestamp": "2026-06-01T15:02:00",
+    "timestamp_raw": "2026-06-01 15:02",
+    "actor": "coolguy88",
+    "content": "want to meet at riverside park saturday?",
+    "extra": {},
+    "id": "b2fb48c6abc3"
+  },
+  {
+    "case": "case-tl",
+    "kind": "image_capture",
+    "source_file": "evidence_photo.jpg",
+    "timestamp": "2026-06-06T16:45:12",
+    "timestamp_raw": "2026:06:06 16:45:12",
+    "actor": null,
+    "content": "Image captured by TestCam Model-X",
+    "extra": {
+      "gps": {
+        "lat": 40.708333333333336,
+        "lon": -74.00583333333333
+      },
+      "camera": "TestCam Model-X"
+    },
+    "id": "386ecd5cc1bb"
+  }
+]
