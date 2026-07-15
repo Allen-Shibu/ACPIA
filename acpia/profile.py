@@ -13,10 +13,36 @@ citation can never be hallucinated.
 import json
 import os
 import re
+import sys
 
 from openai import OpenAI
 
 from acpia.supermemory_client import SupermemoryClient
+
+
+def _empty_profile(case: str) -> dict:
+    return {"case": case, "people": [], "identifiers": [], "locations": [], "behaviors": []}
+
+
+def _extract_with_retry(llm, model: str, messages: list, attempts: int = 2):
+    """Call the model and parse its JSON, retrying on malformed output.
+
+    Small local models intermittently emit invalid JSON (a stray/missing delimiter).
+    A retry usually succeeds because generation is stochastic. Returns the parsed
+    dict, or None if every attempt fails — the caller degrades gracefully rather
+    than letting one bad response crash a whole multi-case run (e.g. correlate)."""
+    last = None
+    for _ in range(attempts):
+        resp = llm.chat.completions.create(
+            model=model, messages=messages, response_format={"type": "json_object"}
+        )
+        try:
+            return extract_json(resp.choices[0].message.content)
+        except (json.JSONDecodeError, ValueError) as e:
+            last = e
+    print(f"[profile] LLM returned unparseable JSON after {attempts} attempts: {last}",
+          file=sys.stderr)
+    return None
 
 
 def extract_json(content: str) -> dict:
@@ -66,29 +92,41 @@ def build_profile(case: str, client: SupermemoryClient | None = None) -> dict:
     client = client or SupermemoryClient()
     memories = client.fetch_all_memories(case)
     if not memories:
-        return {"case": case, "people": [], "identifiers": [], "locations": [], "behaviors": []}
+        return _empty_profile(case)
 
     index_to_id = {i: m["id"] for i, m in enumerate(memories)}
     numbered = "\n".join(f"{i}. {m['memory']}" for i, m in enumerate(memories))
 
     llm = OpenAI(base_url=os.environ["OPENAI_BASE_URL"], api_key=os.environ["OPENAI_API_KEY"])
-    resp = llm.chat.completions.create(
-        model=os.environ["OPENAI_MODEL"],
-        messages=[
+    raw = _extract_with_retry(
+        llm, os.environ["OPENAI_MODEL"],
+        [
             {"role": "system", "content": _SCHEMA_INSTRUCTIONS},
             {"role": "user", "content": f"Evidence memories:\n{numbered}"},
         ],
-        response_format={"type": "json_object"},
     )
-    raw = extract_json(resp.choices[0].message.content)
+    # Degrade gracefully: an unparseable response yields an empty profile for THIS
+    # case, so correlate/timeline over other cases still complete.
+    if raw is None:
+        return _empty_profile(case)
 
-    # Small models are inconsistent with key casing ("People" vs "people") and emit
-    # empty stubs; normalize section keys and drop any item whose primary field is blank.
+    # Small models are inconsistent with shape: wrong key casing ("People"), a
+    # section value that's a string instead of a list, or items that are bare
+    # strings instead of objects. Normalize keys and skip anything malformed, so a
+    # wrong-shape response degrades to fewer/no items rather than crashing.
+    if not isinstance(raw, dict):
+        print(f"[profile] LLM returned non-object JSON for case '{case}'; empty profile.",
+              file=sys.stderr)
+        return _empty_profile(case)
     raw = {k.lower(): v for k, v in raw.items()}
     key_field = {"people": "name", "identifiers": "value", "locations": "name", "behaviors": "desc"}
     profile = {"case": case}
     for section in ("people", "identifiers", "locations", "behaviors"):
-        items = (_resolve_cites(item, index_to_id) for item in raw.get(section, []) or [])
+        raw_items = raw.get(section)
+        if not isinstance(raw_items, list):
+            raw_items = []
+        items = (_resolve_cites(item, index_to_id)
+                 for item in raw_items if isinstance(item, dict))
         profile[section] = [it for it in items if str(it.get(key_field[section], "")).strip()]
     return profile
 

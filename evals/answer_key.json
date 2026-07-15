@@ -1,0 +1,28 @@
+{
+  "_about": "Ground truth for the synthetic Lakeside/Parkview cases. Because we authored the evidence, these are the leads a correct ACPIA run must surface. Used by evals/run.py.",
+  "lakeside": {
+    "chat_message_count": 12,
+    "senders": ["coach_dave", "Jamie"],
+    "first_timestamp": "2026-06-01T15:30:00",
+    "explicit_date": "2026-06-03",
+    "date_trap": "'this saturday' is relative -> must be inferred/verify, never stated as an established date",
+    "people": ["coach_dave", "Jamie"],
+    "identifiers": ["coach_dave", "5550148"],
+    "locations": ["Lakeside Rec Center"],
+    "behaviors_keywords": ["secret", "gift"],
+    "exif": {
+      "timestamp": "2026-06-02T16:00:00",
+      "lat": 34.0522,
+      "lon": -118.2437,
+      "camera": "Apple iPhone 13"
+    }
+  },
+  "parkview": {
+    "people": ["coach_dave", "Sam"],
+    "identifiers": ["coach_dave", "5550148"]
+  },
+  "cross_case_expected_exact": {
+    "username": "coach_dave (appears in both cases)",
+    "phone": "+1-555-0148 == +1 (555) 0148 (same number, different formatting; normalization must link them)"
+  }
+}
