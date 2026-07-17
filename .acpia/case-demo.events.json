@@ -1,0 +1,46 @@
+[
+  {
+    "case": "case-demo",
+    "kind": "chat_message",
+    "source_file": "chat.txt",
+    "timestamp": "2026-07-01T09:15:00",
+    "timestamp_raw": "2026-07-01 09:15",
+    "actor": "stranger99",
+    "content": "hey, dont tell your mom we talked",
+    "extra": {},
+    "id": "12ec02f037b4"
+  },
+  {
+    "case": "case-demo",
+    "kind": "chat_message",
+    "source_file": "chat.txt",
+    "timestamp": "2026-07-01T09:16:00",
+    "timestamp_raw": "2026-07-01 09:16",
+    "actor": "kid_sam",
+    "content": "ok",
+    "extra": {},
+    "id": "50215e367241"
+  },
+  {
+    "case": "case-demo",
+    "kind": "chat_message",
+    "source_file": "chat.txt",
+    "timestamp": "2026-07-01T09:15:00",
+    "timestamp_raw": "2026-07-01 09:15",
+    "actor": "stranger99",
+    "content": "hey, dont tell your mom we talked",
+    "extra": {},
+    "id": "a998e1e1d913"
+  },
+  {
+    "case": "case-demo",
+    "kind": "chat_message",
+    "source_file": "chat.txt",
+    "timestamp": "2026-07-01T09:16:00",
+    "timestamp_raw": "2026-07-01 09:16",
+    "actor": "kid_sam",
+    "content": "ok",
+    "extra": {},
+    "id": "fdcdca135a5b"
+  }
+]

@@ -246,6 +246,13 @@ def tier_b():
         print(f"    {'FOUND ' if _found(l, blob) else 'MISS  '} {l}")
     check("profileB/lead-recall>=0.8", recall >= 0.8, f"{recall:.0%}")
 
+    # Invariant: no emitted entity may be citeless. _resolve_cites strips hallucinated
+    # indices to [], so a surviving item with empty cites would be an unsourced lead
+    # shown to an investigator — build_profile must drop those. Holds for any LLM output.
+    citeless = [it for sec in ("people", "identifiers", "locations", "behaviors")
+                for it in prof.get(sec, []) if not it.get("cites")]
+    check("profileB/no-citeless-entities", not citeless, str(citeless)[:120])
+
     # real cross-case correlate via the same stub (exact tier, no fuzzy LLM)
     result = C.correlate(["lakeside", "parkview"], client=stub, fuzzy=False)
     exact = result["exact"]

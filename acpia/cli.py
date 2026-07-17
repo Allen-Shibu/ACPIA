@@ -143,6 +143,23 @@ _SOURCE_STYLE = {
 }
 
 
+def _cites_markup(cite_ids) -> str:
+    """Render memory citations as Rich markup. The literal '[' MUST be escaped as
+    '\\[' — otherwise Rich parses '[memory:...]' as a (bogus) style tag and silently
+    drops the whole citation. Citations are non-negotiable, so this must not vanish."""
+    return " ".join(f"[dim]\\[memory:{c}][/dim]" for c in cite_ids)
+
+
+def _banner() -> None:
+    """Pixel-block startup banner. pagga font (pyfiglet) + cyan, matching the
+    supermemory-server look. Purely cosmetic — swap font=/color to taste."""
+    from pyfiglet import Figlet
+
+    art = Figlet(font="pagga").renderText("ACPIA")
+    console.print(f"[bold cyan]{art}[/bold cyan]", highlight=False)
+    console.print("[dim]child-protection investigation assistant · leads for human review[/dim]\n")
+
+
 def _clean_source(title: str | None) -> str:
     """Prefer the source filename from our provenance header; else a tidy title."""
     if not title:
@@ -172,7 +189,7 @@ def timeline(case: str, no_llm: bool):
     for e in dated:
         color, mark = _SOURCE_STYLE.get(e["date_source"], ("white", "•"))
         date = e["date"].replace("T", " ")
-        cite = f" [dim][memory:{e['citation']}][/dim]" if e["citation"] else ""
+        cite = f" {_cites_markup([e['citation']])}" if e["citation"] else ""
         src = f" [dim]({_clean_source(e['source'])})[/dim]" if e["source"] else ""
         text = " ".join(e["text"].split())
         console.print(f"[{color}]{mark} {date}[/{color}]  {text}{cite}{src}")
@@ -180,7 +197,7 @@ def timeline(case: str, no_llm: bool):
     if undated:
         console.print(f"\n[bold yellow]Undated — needs review ({len(undated)})[/bold yellow]")
         for e in undated:
-            cite = f" [dim][memory:{e['citation']}][/dim]" if e["citation"] else ""
+            cite = f" {_cites_markup([e['citation']])}" if e["citation"] else ""
             console.print(f"  • {e['text']}{cite}")
     console.print(
         "\n[dim]Draft timeline for investigator review. Verify inferred (~) dates "
@@ -206,7 +223,7 @@ def _render_links(title: str, links: list, verify: bool) -> None:
     for link in links:
         console.print(f"[{color}]{mark} {link['value']}[/{color}]")
         for m in link["members"]:
-            cites = " ".join(f"[dim][memory:{c}][/dim]" for c in m["cites"])
+            cites = _cites_markup(m["cites"])
             console.print(f"    [dim]case[/dim] {m['case']}: {m['display']}  {cites}")
 
 
@@ -239,13 +256,40 @@ def correlate(cases: tuple[str, ...], no_fuzzy: bool):
 
 
 @cli.command()
-@click.option("--case", required=True, help="Case ID to investigate.")
-@click.option("--no-brief", is_flag=True, help="Skip the automatic opening case analysis.")
-def investigate(case: str, no_brief: bool):
-    """Interactive REPL for a case. Auto-analyzes the case on entry."""
-    agent = Agent(case_id=case)
-    console.print(f"[bold]ACPIA[/bold] — investigating case '{case}'. Ctrl+D to exit.\n")
-    if not no_brief:
+@click.option("--case", required=True, help="Case ID to summarize.")
+def summarize(case: str):
+    """Cited persons-of-interest brief — leads for review, NOT a determination of guilt."""
+    from acpia.summarize import build_report
+
+    with console.status("summarizing case..."):
+        rep = build_report(case)
+    persons = rep["persons"]
+    if not persons:
+        console.print(f"[yellow]No cited persons of interest found for case '{case}'.[/yellow]")
+        return
+
+    console.print(f"\n[bold]Persons of Interest — case '{case}'[/bold]")
+    console.print("[dim]▲ evidence concentrates here (a lead, NOT a finding of guilt)[/dim]\n")
+    top = len(persons[0]["indicators"])  # persons is rank-sorted; ties share the mark
+    for p in persons:
+        concentrated = len(p["indicators"]) == top and top > 1
+        color, mark = ("yellow", "▲") if concentrated else ("white", "·")
+        console.print(f"[{color}]{mark} {p['name']}[/{color}]  "
+                      f"[dim]{p['role']} — {len(p['indicators'])} indicator(s)[/dim]")
+        for ind in p["indicators"]:
+            cites = _cites_markup(ind["cites"])
+            console.print(f"    • {ind['desc']}  {cites}")
+    console.print(
+        "\n[dim]Evidence concentration is a lead to investigate, not a finding of guilt. "
+        "The determination is the investigator's. Verify every cited item against source "
+        "evidence.[/dim]"
+    )
+
+
+def _run_repl(agent: Agent, case: str, brief: bool = True) -> None:
+    """Shared interactive loop: optional opening auto-analysis, then Q&A until Ctrl+D."""
+    console.print(f"investigating case '{case}'. Ctrl+D to exit.\n")
+    if brief:
         with console.status("analyzing case (profile, timeline, cross-case links)..."):
             briefing = agent.orient()
         console.print(Markdown(briefing))
@@ -261,6 +305,67 @@ def investigate(case: str, no_brief: bool):
             answer = agent.ask(question)
         console.print(Markdown(answer))
         console.print()
+
+
+@cli.command()
+@click.option("--case", required=True, help="Case ID to investigate.")
+@click.option("--no-brief", is_flag=True, help="Skip the automatic opening case analysis.")
+def investigate(case: str, no_brief: bool):
+    """Interactive REPL for a case. Auto-analyzes the case on entry."""
+    _banner()
+    _run_repl(Agent(case_id=case), case, brief=not no_brief)
+
+
+@cli.command()
+@click.argument("folder", default=".")
+@click.option("--case", default=None, help="Case ID (default: the folder's name).")
+@click.option("--vision", is_flag=True, help="Run a LOCAL vision model over images.")
+@click.option("--yes", is_flag=True, help="Skip the confirmation prompt (unattended runs).")
+def run(folder: str, case: str | None, vision: bool, yes: bool):
+    """Analyze an evidence FOLDER end to end: ingest every supported file, then open
+    the investigation. FOLDER defaults to the current directory; case defaults to its name.
+    """
+    from acpia.extractors import IMAGE_SUFFIXES, PDF_SUFFIXES, TEXT_SUFFIXES
+
+    _banner()
+    root = pathlib.Path(folder).resolve()
+    case = case or root.name
+    supported = TEXT_SUFFIXES | PDF_SUFFIXES | IMAGE_SUFFIXES
+    files = sorted(p for p in root.iterdir()
+                   if p.is_file() and p.suffix.lower() in supported)
+    if not files:
+        console.print(f"[yellow]No supported evidence files in {root}.[/yellow]")
+        return
+
+    console.print(f"[bold]Case '{case}'[/bold] — {len(files)} evidence file(s) in {root}:")
+    for p in files:
+        console.print(f"  • {p.name}")
+    # Ask the officer before ingesting — ingestion sends evidence text to the memory store.
+    if not (yes or click.confirm(f"\nIngest and investigate case '{case}'?", default=True)):
+        return
+
+    client = SupermemoryClient()
+    ingested = queued = 0
+    for p in files:
+        try:
+            _ingest_one(client, str(p), case, wait=True, vision=vision)
+            ingested += 1
+        except TimeoutError:
+            # Doc was submitted; only Supermemory's slow local indexing didn't confirm
+            # in time (known gotcha). It's in the store — proceed, it'll index shortly.
+            console.print(f"[yellow]{p.name}[/yellow] — queued, still indexing")
+            queued += 1
+        except Exception as e:
+            # A real failure (unreadable/unsupported file) shouldn't kill the batch.
+            console.print(f"[red]skipped {p.name}[/red] — {type(e).__name__}: {e}")
+    console.print()
+    if not ingested and not queued:
+        console.print("[yellow]Nothing ingested — aborting.[/yellow]")
+        return
+    if queued and not ingested:
+        console.print("[dim]All evidence is still indexing; the opening analysis may lag "
+                      "until it completes.[/dim]\n")
+    _run_repl(Agent(case_id=case), case, brief=True)
 
 
 if __name__ == "__main__":

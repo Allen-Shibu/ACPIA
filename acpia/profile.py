@@ -127,7 +127,12 @@ def build_profile(case: str, client: SupermemoryClient | None = None) -> dict:
             raw_items = []
         items = (_resolve_cites(item, index_to_id)
                  for item in raw_items if isinstance(item, dict))
-        profile[section] = [it for it in items if str(it.get(key_field[section], "")).strip()]
+        # Require a surviving citation: _resolve_cites strips hallucinated/out-of-range
+        # indices to [], so an item with empty cites is an unsourced claim. Emitting it
+        # (e.g. a suspect with cites:[]) violates the core promise that every claim
+        # cites its source — drop it rather than show the investigator a citeless lead.
+        profile[section] = [it for it in items
+                            if str(it.get(key_field[section], "")).strip() and it["cites"]]
     return profile
 
 
